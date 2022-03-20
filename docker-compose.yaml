@@ -1,0 +1,52 @@
+version: '3.9'
+services:
+  db:
+    image: mysql:5.7
+    volumes:
+    - db_data:/var/lib/mysql
+    restart: always
+    networks:
+      mysql_internal:
+    environment:
+      MYSQL_ROOT_PASSWORD: haider7861
+      MYSQL_DATABASE: python
+      MYSQL_USER: py
+      MYSQL_PASSWORD: py123
+  backend:
+    build:
+      context: p1-docker-compose-backend/backend-python/
+      dockerfile: Dockerfile
+    depends_on:
+    - db
+    init: true
+    deploy:
+      replicas: 2
+    networks:
+      mysql_internal:
+      application:
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: py
+      WORDPRESS_DB_PASSWORD: py123
+      WORDPRESS_DB_NAME: python
+  frontend:
+    build: 
+      context: p1-docker-compose-frontend/frontend-node/
+      dockerfile: Dockerfile
+    init: true
+    deploy:
+      replicas: 2
+    networks:
+      application:
+    ports:
+    - "7071-7076:8080"
+    depends_on:
+    - backend
+volumes:
+  db_data: {}
+networks:
+  mysql_internal:
+    internal: true
+  application:
+    name: application
